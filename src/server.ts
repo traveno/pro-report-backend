@@ -35,7 +35,10 @@ function getAllWorkOrders(request: Request, response: Response) {
 }
 
 function getWorkOrderByIndex(request: Request, response: Response) {
-    PS_WorkOrder.findAll({ where: { index: request.params.index } }).then(results => {
+    PS_WorkOrder.findAll({
+        where: { index: request.params.index },
+        include: [PS_RoutingRow, PS_TrackingRow]
+    }).then(results => {
         response.status(200).json(results);
     })
 
