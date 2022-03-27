@@ -1,7 +1,6 @@
 import express, { response } from 'express';
 import { Request, Response } from 'express';
 import { PS_RoutingRow, PS_TrackingRow, PS_WorkOrder, sequelize } from './db';
-import * as db from './queries';
 
 const app = express();
 
