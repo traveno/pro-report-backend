@@ -13,7 +13,9 @@ app.get('/api', (request: Request, response: Response) => {
 });
 
 app.get('/api/workorders', getAllWorkOrders);
+
 app.get('/api/workorders/:index', getWorkOrderByIndex);
+app.get('/api/workorders/by_resource/:resource', getWorkOrdersByResource);
 
 app.get('/api/routingrows', getAllRoutingRows);
 app.get('/api/routingrows/:workOrderId', getRoutingRowsByWorkOrderId);
@@ -30,7 +32,6 @@ app.listen(port, () => {
 function getAllWorkOrders(request: Request, response: Response) {
     PS_WorkOrder.findAll().then(results => {
         response.status(200).json(results);
-        console.log(...results.map(e => e.id));
     });
 }
 
@@ -40,8 +41,22 @@ function getWorkOrderByIndex(request: Request, response: Response) {
         include: [PS_RoutingRow, PS_TrackingRow]
     }).then(results => {
         response.status(200).json(results);
-    })
+    });
+}
 
+function getWorkOrdersByResource(request: Request, response: Response) {
+    PS_WorkOrder.findAll({
+        include: [PS_RoutingRow]
+    }).then(results => {
+        let filteredResults: PS_WorkOrder[] = [];
+
+        for (let wo of results)
+            for(let row of wo.routingRows)
+                if (row.resource.toLowerCase().trim() === request.params.resource.toLowerCase().trim())
+                    filteredResults.push(wo);
+
+        response.status(200).json(filteredResults);
+    });
 }
 
 function getAllRoutingRows(request: Request, response: Response) {
