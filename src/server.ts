@@ -8,18 +8,18 @@ const port = 3000;
 
 
 
-app.get('/', (request: Request, response: Response) => {
-    response.json({ info: 'Node.js server functioning normally' });
+app.get('/api', (request: Request, response: Response) => {
+    response.json({ info: 'Hello API' });
 });
 
-app.get('/workorders', getAllWorkOrders);
-app.get('/workorders/:index', getWorkOrderByIndex);
+app.get('/api/workorders', getAllWorkOrders);
+app.get('/api/workorders/:index', getWorkOrderByIndex);
 
-app.get('/routingrows', getAllRoutingRows);
-app.get('/routingrows/:workOrderId', getRoutingRowsByWorkOrderId);
+app.get('/api/routingrows', getAllRoutingRows);
+app.get('/api/routingrows/:workOrderId', getRoutingRowsByWorkOrderId);
 
-app.get('/trackingrows', getAllTrackingRows);
-app.get('/trackingrows/:workOrderId', getTrackingRowsByWorkOrderId);
+app.get('/api/trackingrows', getAllTrackingRows);
+app.get('/api/trackingrows/:workOrderId', getTrackingRowsByWorkOrderId);
 
 
 app.listen(port, () => {
