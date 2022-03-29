@@ -17,6 +17,8 @@ app.get('/api/workorders', getAllWorkOrders);
 app.get('/api/workorders/:index', getWorkOrderByIndex);
 app.get('/api/workorders/by_resource/:resource', getWorkOrdersByResource);
 
+app.get('/api/resource_activity', getResourceActivity);
+
 app.get('/api/routingrows', getAllRoutingRows);
 app.get('/api/routingrows/:workOrderId', getRoutingRowsByWorkOrderId);
 
@@ -57,6 +59,50 @@ function getWorkOrdersByResource(request: Request, response: Response) {
 
         response.status(200).json(filteredResults);
     });
+}
+
+function getResourceActivity(request: Request, response: Response) {
+    let resources = ['DMU1', 'DMU2', 'DMU3', 'DMU4', 
+                     'HAAS1', 'HAAS2', 'HAAS3', 'HAAS4', 'HAAS5', 'HAAS6', 'HAAS7', 'HAAS8',
+                     'MAM1', 'MAM2', 'MAM3',
+                     'MAK1', 'MAK2', 'MAK3', 'MAK4', 'MAK5', 'MAK6', 'MAK7',
+                     'NL2500', 'NLX2500', 'NT1000', 'NTX2000', 'L2-20'];
+
+    let temp = new Map<string, ResourceActivity>();
+
+    PS_WorkOrder.findAll({
+        include: [PS_RoutingRow]
+    }).then(results => {
+        results.forEach(workorder => {
+            for (let routingRow of workorder.routingRows) {
+                if (resources.includes(routingRow.resource)) {
+                    let activity = temp.get(routingRow.resource);
+
+                    if (activity === undefined)
+                        activity = {} as ResourceActivity;
+                    
+                    if (workorder.status === 0)
+                        activity.active++;
+                    else if (workorder.status === 4)
+                        activity.mfgcomplete++;
+                    else if (workorder.status === 6)
+                        activity.shipped++;
+                    else if (workorder.status === 3)
+                        activity.invoiced++;
+
+                    temp.set(routingRow.resource, activity);
+                }
+            }
+        });
+        response.status(200).json(temp);
+    });
+}
+
+interface ResourceActivity {
+    active: number,
+    mfgcomplete: number,
+    shipped: number,
+    invoiced: number
 }
 
 function getAllRoutingRows(request: Request, response: Response) {
