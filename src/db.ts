@@ -7,22 +7,22 @@ export class PS_WorkOrder extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.BIGINT)
-    id!: number;
+    id: number;
 
     @Column
-    index!: string
+    index: string
 
     @Column
-    status!: number
+    status: number
 
     @Column
-    orderQuantity!: number
+    orderQuantity: number
 
     @HasMany(() => PS_RoutingRow)
-    routingRows!: PS_RoutingRow[];
+    routingRows: PS_RoutingRow[];
 
     @HasMany(() => PS_TrackingRow)
-    trackingRows!: PS_TrackingRow[];
+    trackingRows: PS_TrackingRow[];
 }
 
 @Table({ timestamps: false })
@@ -30,29 +30,29 @@ export class PS_RoutingRow extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.BIGINT)
-    id!: number;
+    id: number;
 
     @Column
-    op!: string;
+    op: string;
 
     @Column
-    opDesc!: string;
+    opDesc: string;
 
     @Column
-    resource!: string;
+    resource: string;
 
     @Column(DataType.DECIMAL)
-    completeTotal!: number;
+    completeTotal: number;
 
     @Column(DataType.DATE)
-    completeDate!: Date | null
+    completeDate: Date | null
 
     @ForeignKey(() => PS_WorkOrder)
     @Column
-    workOrderId!: number;
+    workOrderId: number;
 
     @BelongsTo(() => PS_WorkOrder)
-    workOrder!: PS_WorkOrder;
+    workOrder: PS_WorkOrder;
 }
 
 @Table({ timestamps: false })
@@ -60,35 +60,52 @@ export class PS_TrackingRow extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.BIGINT)
-    id!: number;
+    id: number;
     
     @Column
-    dateStarted!: Date;
+    dateStarted: Date;
 
     @Column
-    dateEnded!: Date;
+    dateEnded: Date;
 
     @Column
-    op!: string;
+    op: string;
 
     @Column
-    resource!: string;
+    resource: string;
 
     @Column(DataType.DECIMAL)
-    quantityStart!: number;
+    quantityStart: number;
 
     @Column(DataType.DECIMAL)
-    quantityEnd!: number;
+    quantityEnd: number;
 
     @Column(DataType.DECIMAL)
-    quantityTotal!: number;
+    quantityTotal: number;
 
     @ForeignKey(() => PS_WorkOrder)
     @Column
-    workOrderId!: number;
+    workOrderId: number;
 
     @BelongsTo(() => PS_WorkOrder)
-    workOrder!: PS_WorkOrder;
+    workOrder: PS_WorkOrder;
+}
+
+@Table({ timestamps: false })
+export class UpdateInfo extends Model {
+    @PrimaryKey
+    @AutoIncrement
+    @Column(DataType.BIGINT)
+    id: number;
+    
+    @Column
+    timeStarted: Date;
+
+    @Column
+    timeEnded: Date;
+
+    @Column
+    numRecordsUpdated: number;
 }
 
 export const sequelize = new Sequelize({
@@ -98,6 +115,6 @@ export const sequelize = new Sequelize({
     host: process.env.DB_HOST!,
     port: Number(process.env.DB_PORT),
     dialect: process.env.DB_DIALECT! as Dialect,
-    models: [PS_WorkOrder, PS_RoutingRow, PS_TrackingRow],
+    models: [PS_WorkOrder, PS_RoutingRow, PS_TrackingRow, UpdateInfo],
     logging: false
 });
