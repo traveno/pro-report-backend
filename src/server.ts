@@ -1,12 +1,14 @@
 import express, { response } from 'express';
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { PS_RoutingRow, PS_TrackingRow, PS_WorkOrder, sequelize } from './db';
+import path from 'path';
 
 const app = express();
 
 const port = 3000;
 
-
+app.use(express.static(__dirname + '/shop-meister'));
 
 app.get('/api', (request: Request, response: Response) => {
     response.json({ info: 'Hello API' });
@@ -16,14 +18,20 @@ app.get('/api/workorders', getAllWorkOrders);
 
 app.get('/api/workorders/:index', getWorkOrderByIndex);
 app.get('/api/workorders/by_resource/:resource', getWorkOrdersByResource);
+app.get('/api/workorders/by_routing_activity/:fromDate/:toDate', getWorkOrdersByRoutingActivity)
 
 app.get('/api/resource_activity', getResourceActivity);
 
 app.get('/api/routingrows', getAllRoutingRows);
 app.get('/api/routingrows/:workOrderId', getRoutingRowsByWorkOrderId);
+app.get('/api/routingrows/by_date/:fromDate/:toDate', getRoutingRowsByDate)
 
 app.get('/api/trackingrows', getAllTrackingRows);
 app.get('/api/trackingrows/:workOrderId', getTrackingRowsByWorkOrderId);
+
+app.get('/*', (request, response, next) => {
+    response.sendFile(path.join(__dirname + '/shop-meister/index.html'));
+});
 
 
 app.listen(port, () => {
@@ -58,6 +66,33 @@ function getWorkOrdersByResource(request: Request, response: Response) {
                     filteredResults.push(wo);
 
         response.status(200).json(filteredResults);
+    });
+}
+
+function getWorkOrdersByRoutingActivity(request: Request, response: Response) {
+    try {
+        var fromDate = new Date(request.params.fromDate);
+        var toDate = new Date(request.params.toDate);
+    } catch (error) {
+        throw error;
+    }
+
+    let temp: PS_WorkOrder[] = [];
+
+    PS_WorkOrder.findAll({
+        order: [['index', 'DESC']],
+        include: [PS_RoutingRow]
+    }).then(results => {
+        for (let wo of results) {
+            for (let row of wo.routingRows) {
+                if (!row.completeDate) continue;
+                if (row.completeDate > fromDate && row.completeDate < toDate)
+                    if (!temp.map(e => e.id).includes(wo.id))
+                         temp.push(wo);
+            }
+        }
+
+        response.status(200).json(temp);
     });
 }
 
@@ -123,10 +158,33 @@ function getRoutingRowsByWorkOrderId(request: Request, response: Response) {
     });
 }
 
+function getRoutingRowsByDate(request: Request, response: Response) {
+    try {
+        var fromDate = new Date(request.params.fromDate);
+        var toDate = new Date(request.params.toDate);
+    } catch (error) {
+        throw error;
+    }
+
+    PS_RoutingRow.findAll({
+        where: {
+            completeDate: {
+                [Op.and]: [
+                    { [Op.gt]: fromDate },
+                    { [Op.lt]: toDate }
+                ]
+            }
+        }
+    }).then(results => {
+        response.status(200).json(results);
+    });
+}
+
 function getAllTrackingRows(request: Request, response: Response) {
     PS_TrackingRow.findAll().then(results => {
         response.status(200).json(results);
     });
+
 }
 
 function getTrackingRowsByWorkOrderId(request: Request, response: Response) {
