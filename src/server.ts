@@ -1,7 +1,7 @@
 import express, { response } from 'express';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { PS_RoutingRow, PS_TrackingRow, PS_WorkOrder, sequelize } from './db';
+import { PS_RoutingRow, PS_TrackingRow, PS_WorkOrder, sequelize, UpdateInfo } from './db';
 import path from 'path';
 
 const app = express();
@@ -28,6 +28,8 @@ app.get('/api/routingrows/by_date/:fromDate/:toDate', getRoutingRowsByDate)
 
 app.get('/api/trackingrows', getAllTrackingRows);
 app.get('/api/trackingrows/:workOrderId', getTrackingRowsByWorkOrderId);
+
+app.get('/api/updateinfos', getAllUpdateInfos);
 
 app.get('/*', (request, response, next) => {
     response.sendFile(path.join(__dirname + '/shop-meister/index.html'));
@@ -189,6 +191,12 @@ function getAllTrackingRows(request: Request, response: Response) {
 
 function getTrackingRowsByWorkOrderId(request: Request, response: Response) {
     PS_TrackingRow.findAll({ where: { workOrderId: request.params.workOrderId } }).then(results => {
+        response.status(200).json(results);
+    });
+}
+
+function getAllUpdateInfos(request: Request, response: Response) {
+    UpdateInfo.findAll().then(results => {
         response.status(200).json(results);
     });
 }
