@@ -3,6 +3,9 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { PS_RoutingRow, PS_TrackingRow, PS_WorkOrder, sequelize, UpdateInfo } from './db';
 import path from 'path';
+import NodeCache from 'node-cache';
+
+const cache = new NodeCache();
 
 const app = express();
 
@@ -14,7 +17,8 @@ app.get('/api', (request: Request, response: Response) => {
     response.json({ info: 'Hello API' });
 });
 
-app.get('/api/workorders', getAllWorkOrders);
+app.get('/api/workorders', getWorkOrders);
+app.get('/api/workordersdetailed', getWorkOrdersDetailed)
 
 app.get('/api/workorders/:index', getWorkOrderByIndex);
 app.get('/api/workorders/by_resource/:resource', getWorkOrdersByResource);
@@ -41,10 +45,25 @@ app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
 
-function getAllWorkOrders(request: Request, response: Response) {
+function getWorkOrders(request: Request, response: Response) {
     PS_WorkOrder.findAll().then(results => {
         response.status(200).json(results);
     });
+}
+
+function getWorkOrdersDetailed(request: Request, response: Response) {
+    let bigData = cache.get<PS_WorkOrder[]>('BIGDATA');
+
+    if (bigData === undefined) {
+        PS_WorkOrder.findAll({
+            include: [PS_RoutingRow, PS_TrackingRow]
+        }).then(results => {
+            cache.set('BIGDATA', results, 300);
+            response.status(200).json(results);
+        });
+    } else {
+        response.status(200).json(bigData);
+    }
 }
 
 function getWorkOrderByIndex(request: Request, response: Response) {
