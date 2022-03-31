@@ -3,12 +3,8 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { PS_RoutingRow, PS_TrackingRow, PS_WorkOrder, sequelize, UpdateInfo } from './db';
 import path from 'path';
-import NodeCache from 'node-cache';
-
-const cache = new NodeCache();
 
 const app = express();
-
 const port = 3000;
 
 app.use(express.static(__dirname + '/shop-meister'));
@@ -52,18 +48,11 @@ function getWorkOrders(request: Request, response: Response) {
 }
 
 function getWorkOrdersDetailed(request: Request, response: Response) {
-    let bigData = cache.get<PS_WorkOrder[]>('BIGDATA');
-
-    if (bigData === undefined) {
-        PS_WorkOrder.findAll({
-            include: [PS_RoutingRow, PS_TrackingRow]
-        }).then(results => {
-            cache.set('BIGDATA', results, 300);
-            response.status(200).json(results);
-        });
-    } else {
-        response.status(200).json(bigData);
-    }
+    PS_WorkOrder.findAll({
+        include: [PS_RoutingRow, PS_TrackingRow]
+    }).then(results => {
+        response.status(200).json(results);
+    });
 }
 
 function getWorkOrderByIndex(request: Request, response: Response) {
